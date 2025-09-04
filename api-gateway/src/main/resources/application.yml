@@ -1,0 +1,40 @@
+server:
+  port: 8080
+
+jwt:
+  secret: qBTmv4oXFF2b9i6wE3c15435le4g34g12g1g34g14g341g43g14g14g1g43g1243g
+  lifetime: PT30M
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # =================== Auth Service (ОСТАЕТСЯ ПУБЛИЧНЫМ) ===================
+        - id: auth-service-route
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth/**
+
+        # =================== Payment Service (ЗАЩИЩЕН) ===================
+        - id: payment-service-route
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/payments/**
+          filters:
+            - AuthenticationFilter
+
+        # =================== Ticket Service (ЗАЩИЩЕН) ===================
+        - id: ticket-service-route
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/tickets/**
+          filters:
+            - AuthenticationFilter
+
+        # =================== Video Service (ЗАЩИЩЕН) ===================
+        - id: video-service-route
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/videos/**
+          filters:
+            - AuthenticationFilter

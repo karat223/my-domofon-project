@@ -1,0 +1,140 @@
+# Версия синтаксиса docker-compose
+version: '3.8'
+
+# В этом блоке мы определяем все наши контейнеры (сервисы)
+services:
+
+  # ===============================================
+  # БАЗЫ ДАННЫХ (по одной для каждого сервиса)
+  # ===============================================
+
+  postgres-auth:
+    image: postgres:14-alpine
+    container_name: postgres-auth-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=auth_db
+    ports:
+      - "5431:5432"
+    volumes:
+      - ./data/postgres-auth:/var/lib/postgresql/data
+    restart: always
+
+  postgres-payment:
+    image: postgres:14-alpine
+    container_name: postgres-payment-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=payment_db
+    ports:
+      - "5442:5432"
+    volumes:
+      - ./data/postgres-payment:/var/lib/postgresql/data
+    restart: always
+
+  postgres-ticket:
+    image: postgres:14-alpine
+    container_name: postgres-ticket-db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=ticket_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./data/postgres-ticket:/var/lib/postgresql/data
+    restart: always
+
+  # ===============================================
+  # КЭШ
+  # ===============================================
+
+  redis:
+    image: redis:alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    restart: always
+
+  # ===============================================
+  # БРОКЕР СООБЩЕНИЙ KAFKA
+  # ===============================================
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  # ... (ваши существующие сервисы) ...
+
+  # ===============================================
+  # СИСТЕМА МОНИТОРИНГА
+  # ===============================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      # Подключаем наш файл с настройками для Prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: always
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    restart: always
+
+  # ... (ваши существующие сервисы: prometheus, grafana, kafka и т.д.) ...
+
+  # ===============================================
+  # СИСТЕМА ЛОГИРОВАНИЯ (ELK)
+  # ===============================================
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false # Отключаем безопасность для простоты
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # Ограничиваем потребление памяти
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    restart: always
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.9.0
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch # Kibana запустится только после старта Elasticsearch
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200 # Указываем Kibana, где найти Elasticsearch
+    restart: always

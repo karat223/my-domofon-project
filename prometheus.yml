@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s # Как часто опрашивать сервисы
+
+scrape_configs:
+  - job_name: 'video-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # Указываем адрес нашего video-service
+      # ВАЖНО: используем host.docker.internal, чтобы из контейнера Prometheus
+      # можно было "достучаться" до сервиса, запущенного на вашем компьютере
+      - targets: ['host.docker.internal:8085']

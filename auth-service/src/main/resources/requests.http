@@ -1,0 +1,52 @@
+### Запрос на аутентификацию
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "username": "user_flat_101",
+  "password": "password123"
+}
+
+### Создание платежа с токеном через Gateway
+POST http://localhost:8080/api/payments/create
+Content-Type: application/json
+Authorization: Bearer "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwic3ViIjoidXNlcl9mbGF0XzEwMSIsImlhdCI6MTc1NjIwNjM3MiwiZXhwIjoxNzU2MjA4MTcyfQ.jxqL5KGmI32hGnFYUw4cXbU_OsiLGaQlj5pTCXOsV58"
+
+{
+  "username": "user_flat_101",
+  "amount": 123.45
+}
+
+### 1. Создание новой заявки
+POST http://localhost:8080/api/tickets/create
+Content-Type: application/json
+
+{
+  "username": "user_flat_101",
+  "title": "Не работает домофон",
+  "description": "Перестала работать кнопка открытия двери."
+}
+
+### 2. Получение всех заявок
+GET http://localhost:8080/api/tickets
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwic3ViIjoidXNlcl9mbGF0XzEwMSIsImlhdCI6MTc1NjIwNjU0MCwiZXhwIjoxNzU2MjA4MzQwfQ.T6s0z1UELIFpNFsp40VbrD_nqXkOfCfQucaGbqVY5VE
+
+### 3. Обновление статуса заявки (замените 1 на ID из ответа №1)
+PATCH http://localhost:8080/api/tickets/1/status
+Content-Type: application/json
+
+{
+  "status": "IN_PROGRESS"
+}
+
+### Запрос снимка с камеры (с токеном)
+GET http://localhost:8080/api/videos/snapshot
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwic3ViIjoidXNlcl9mbGF0XzEwMSIsImlhdCI6MTc1NjU3NTA4NywiZXhwIjoxNzU2NTc2ODg3fQ.e4eeDuWcZO2jipZM5RFWmliEtjIid2Jins1TYQ0OBVo
+
+### Начать запись видео
+POST http://localhost:8080/api/videos/record/start
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwic3ViIjoidXNlcl9mbGF0XzEwMSIsImlhdCI6MTc1Njg5MjU4OCwiZXhwIjoxNzU2ODk0Mzg4fQ.5mR9iPlerBUllL-3d-wOGXeZc_pzkX2hvpWjXogQ6GY
+
+### Остановить запись видео
+POST http://localhost:8080/api/videos/record/stop
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6WyJST0xFX1VTRVIiXSwic3ViIjoidXNlcl9mbGF0XzEwMSIsImlhdCI6MTc1Njg5MjU4OCwiZXhwIjoxNzU2ODk0Mzg4fQ.5mR9iPlerBUllL-3d-wOGXeZc_pzkX2hvpWjXogQ6GY
